@@ -22,18 +22,18 @@ class PokeWizard(models.TransientModel):
     result_name = fields.Char(string='Nombre', readonly=True)
     result_id = fields.Integer(string='ID', readonly=True)
     
+    # Datos de Pokémon
     height_cm = fields.Float(string='Altura (cm)', readonly=True)
     weight_kg = fields.Float(string='Peso (kg)', readonly=True)
     poke_types = fields.Char(string='Tipos', readonly=True)
     
+    # Datos de Objetos
     item_cost = fields.Integer(string='Costo', readonly=True)
     item_effect = fields.Text(string='Efecto', readonly=True)
 
+    # Imágenes
     sprite_front = fields.Binary(string='Vista Frontal', readonly=True)
     sprite_back = fields.Binary(string='Vista Trasera', readonly=True)
-    
-    # Campo usado por el XML para forzar el cache-busting
-    image_cache_buster = fields.Integer(default=0, readonly=True) 
 
     def _fetch_image(self, url):
         """Método auxiliar para descargar y convertir imágenes a Base64"""
@@ -46,25 +46,9 @@ class PokeWizard(models.TransientModel):
         except requests.exceptions.RequestException:
             return False
         return False
-    
-    # NUEVA FUNCIÓN SOLICITADA PARA ELIMINAR CACHÉ
-    def _reset_wizard_images(self):
-        """Limpia los campos binarios de imagen y actualiza el contador de caché."""
-        self.ensure_one()
-        # 1. Limpieza Agresiva: Forzamos el vaciado de las imágenes con una escritura inmediata
-        self.write({
-            'sprite_front': False,
-            'sprite_back': False,
-            # 2. Incrementamos el contador para garantizar una nueva URL de caché
-            'image_cache_buster': self.image_cache_buster + 1, 
-        })
-
 
     def action_search_api(self):
         self.ensure_one()
-        
-        # LLAMADA A LA FUNCIÓN DE RESETEO
-        self._reset_wizard_images() 
         
         query = self.search_name.strip().lower()
         
@@ -83,15 +67,28 @@ class PokeWizard(models.TransientModel):
 
             data = response.json()
             
+            # 1. INICIALIZACIÓN Y LIMPIEZA
+            # Se limpian absolutamente todos los campos de resultado para asegurar que 
+            # no quede data de la consulta anterior, especialmente las imágenes binarias.
             vals = {
+                'search_type': self.search_type,
+                'search_name': self.search_name,
                 'found': True,
                 'result_name': data['name'].replace('-', ' ').title(),
                 'result_id': data['id'],
-                'height_cm': 0, 'weight_kg': 0, 'poke_types': False,
-                'item_cost': 0, 'item_effect': False,
-                # El buster ya se incrementó en el reset, no lo incluimos aquí.
+                
+                # LIMPIEZA DE DATOS ESPECÍFICOS (Pokémon y Objetos)
+                'height_cm': 0, 
+                'weight_kg': 0, 
+                'poke_types': False,
+                'item_cost': 0, 
+                'item_effect': False,
+                # LIMPIEZA DE IMÁGENES: ESTO ES LO CRUCIAL
+                'sprite_front': False, 
+                'sprite_back': False,  
             }
 
+            # 2. RELLENADO ESPECÍFICO (Sobrescribe los valores de arriba)
             if self.search_type == 'pokemon':
                 poke_types = ", ".join([t['type']['name'].capitalize() for t in data['types']])
 
@@ -110,20 +107,23 @@ class PokeWizard(models.TransientModel):
                         if entry['language']['name'] == 'en':
                             effect_text = entry['short_effect']
                 
+                # Aquí solo se actualiza 'sprite_front'. 'sprite_back' se mantiene en False.
                 vals.update({
                     'item_cost': data.get('cost', 0),
                     'item_effect': effect_text,
                     'sprite_front': self._fetch_image(data['sprites']['default']),
                 })
-                
-            # Escritura final para cargar los datos nuevos
-            self.write(vals)
+            
+            # 3. CREACIÓN Y RETORNO DE ACCIÓN
+            # La creación de un nuevo registro wizard ('TransientModel') es el mecanismo 
+            # de Odoo para asegurar un estado limpio y anular la caché del navegador al cambiar de ID.
+            new_wizard = self.create(vals)
 
             return {
                 'type': 'ir.actions.act_window',
                 'res_model': 'poke.wizard',
                 'view_mode': 'form',
-                'res_id': self.id,
+                'res_id': new_wizard.id,
                 'target': 'new',
             }
 

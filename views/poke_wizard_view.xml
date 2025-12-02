@@ -33,7 +33,7 @@
                                 <field name="sprite_front" 
                                        widget="image" 
                                        class="oe_avatar" 
-                                       options="{'size': [128, 128], 'image_content': 'image_cache_buster'}"/>
+                                       options="{'size': [128, 128]}"/>
                             </div>
                             <div class="mx-2" invisible="search_type == 'item'">
                                 <label for="sprite_back" string="Detrás" style="font-weight:bold;"/>
@@ -41,12 +41,11 @@
                                 <field name="sprite_back" 
                                        widget="image" 
                                        class="oe_avatar" 
-                                       options="{'size': [128, 128], 'image_content': 'image_cache_buster'}"/>
+                                       options="{'size': [128, 128]}"/>
                             </div>
                         </div>
 
                         <group invisible="not found">
-                            <field name="image_cache_buster" invisible="1"/> 
                             
                             <group string="Datos Generales">
                                 <field name="result_name"/>
