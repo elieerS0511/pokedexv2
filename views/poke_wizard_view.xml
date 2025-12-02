@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_poke_wizard_form" model="ir.ui.view">
+            <field name="name">poke.wizard.form</field>
+            <field name="model">poke.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Consultar PokeAPI">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="search_type" widget="radio" options="{'horizontal': true}"/>
+                            </group>
+                            <group>
+                                <field name="search_name" placeholder="Ej: Pikachu, master-ball, 150"/>
+                            </group>
+                        </group>
+                        
+                        <div class="text-center">
+                            <button name="action_search_api" 
+                                    string="Consultar" 
+                                    type="object" 
+                                    class="btn-primary"
+                                    icon="fa-search"/>
+                        </div>
+
+                        <separator string="Resultados" invisible="not found"/>
+                        
+                        <div class="text-center d-flex justify-content-center" invisible="not found">
+                            <div class="mx-2">
+                                <label for="sprite_front" string="Frente" style="font-weight:bold;"/>
+                                <br/>
+                                <field name="sprite_front" 
+                                       widget="image" 
+                                       class="oe_avatar" 
+                                       options="{'size': [128, 128], 'image_content': 'image_cache_buster'}"/>
+                            </div>
+                            <div class="mx-2" invisible="search_type == 'item'">
+                                <label for="sprite_back" string="Detrás" style="font-weight:bold;"/>
+                                <br/>
+                                <field name="sprite_back" 
+                                       widget="image" 
+                                       class="oe_avatar" 
+                                       options="{'size': [128, 128], 'image_content': 'image_cache_buster'}"/>
+                            </div>
+                        </div>
+
+                        <group invisible="not found">
+                            <field name="image_cache_buster" invisible="1"/> 
+                            
+                            <group string="Datos Generales">
+                                <field name="result_name"/>
+                                <field name="result_id"/>
+                            </group>
+                            
+                            <group string="Físico" invisible="search_type != 'pokemon'">
+                                <field name="poke_types"/>
+                                <field name="height_cm"/>
+                                <field name="weight_kg"/>
+                            </group>
+
+                            <group string="Detalles Objeto" invisible="search_type != 'item'">
+                                <field name="item_cost"/>
+                                <field name="item_effect"/>
+                            </group>
+                        </group>
+                    </sheet>
+                    <footer>
+                        <button string="Cerrar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_poke_wizard" model="ir.actions.act_window">
+            <field name="name">Buscador PokeAPI</field>
+            <field name="res_model">poke.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_poke_root" name="PokeAPI" sequence="10"/>
+        
+        <menuitem id="menu_poke_wizard" 
+                  name="Buscar Pokémon/Item" 
+                  parent="menu_poke_root" 
+                  action="action_poke_wizard" 
+                  sequence="1"/>
+    </data>
+</odoo>
