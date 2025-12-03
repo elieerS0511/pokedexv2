@@ -35,6 +35,11 @@ class PokeWizard(models.TransientModel):
     sprite_front = fields.Binary(string='Vista Frontal', readonly=True)
     sprite_back = fields.Binary(string='Vista Trasera', readonly=True)
 
+    @api.onchange('search_type')
+    def _onchange_search_type(self):
+        self.sprite_front = False
+        self.sprite_back = False
+
     def _fetch_image(self, url):
         """Método auxiliar para descargar y convertir imágenes a Base64"""
         if not url:
@@ -48,7 +53,8 @@ class PokeWizard(models.TransientModel):
         return False
 
     def action_search_api(self):
-        self.ensure_one()
+        self.sprite_front = False
+        self.sprite_back = False
         
         query = self.search_name.strip().lower()
         
@@ -71,6 +77,9 @@ class PokeWizard(models.TransientModel):
             # Se limpian absolutamente todos los campos de resultado para asegurar que 
             # no quede data de la consulta anterior, especialmente las imágenes binarias.
             vals = {
+                 # LIMPIEZA DE IMÁGENES: ESTO ES LO CRUCIAL
+                'sprite_front': False, 
+                'sprite_back': False, 
                 'search_type': self.search_type,
                 'search_name': self.search_name,
                 'found': True,
@@ -82,10 +91,7 @@ class PokeWizard(models.TransientModel):
                 'weight_kg': 0, 
                 'poke_types': False,
                 'item_cost': 0, 
-                'item_effect': False,
-                # LIMPIEZA DE IMÁGENES: ESTO ES LO CRUCIAL
-                'sprite_front': False, 
-                'sprite_back': False,  
+                'item_effect': False, 
             }
 
             # 2. RELLENADO ESPECÍFICO (Sobrescribe los valores de arriba)
@@ -93,6 +99,8 @@ class PokeWizard(models.TransientModel):
                 poke_types = ", ".join([t['type']['name'].capitalize() for t in data['types']])
 
                 vals.update({
+                    'sprite_front': False, 
+                    'sprite_back': False, 
                     'height_cm': data['height'] * 10,
                     'weight_kg': data['weight'] / 10.0,
                     'poke_types': poke_types,
@@ -104,7 +112,7 @@ class PokeWizard(models.TransientModel):
                 effect_text = "Sin descripción"
                 if 'effect_entries' in data and data['effect_entries']:
                     for entry in data['effect_entries']:
-                        if entry['language']['name'] == 'en':
+                        if entry['language']['name'] == 'es':
                             effect_text = entry['short_effect']
                 
                 # Aquí solo se actualiza 'sprite_front'. 'sprite_back' se mantiene en False.
