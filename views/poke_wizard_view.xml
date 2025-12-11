@@ -1,69 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+Este archivo XML define la interfaz de usuario para el asistente de PokeAPI en Odoo.
+Contiene la definición del formulario, la acción de ventana que lo abre y la entrada de menú.
+-->
 <odoo>
     <data>
+        <!--
+        Definición de la Vista Formulario para el asistente 'poke.wizard'.
+        Este 'record' describe cómo se debe renderizar el formulario en la interfaz de Odoo.
+        -->
         <record id="view_poke_wizard_form" model="ir.ui.view">
             <field name="name">poke.wizard.form</field>
             <field name="model">poke.wizard</field>
             <field name="arch" type="xml">
                 <form string="Consultar PokeAPI">
                     <sheet>
+                        <!--
+                        Sección de Búsqueda:
+                        Contiene los controles para que el usuario ingrese sus criterios de búsqueda.
+                        -->
                         <group>
                             <group>
+                                <!-- Campo de selección para el tipo de búsqueda (Pokémon u Objeto).
+                                     El widget 'radio' muestra las opciones como botones de opción.
+                                     'horizontal': true los alinea horizontalmente. -->
                                 <field name="search_type" widget="radio" options="{'horizontal': true}"/>
                             </group>
                             <group>
+                                <!-- Campo de texto para que el usuario ingrese el nombre o ID.
+                                     El 'placeholder' muestra un texto de ejemplo. -->
                                 <field name="search_name" placeholder="Ej: Pikachu, master-ball, 150"/>
                             </group>
                         </group>
-                        
+
+                        <!--
+                        Botón de Acción:
+                        Este botón principal ejecuta la función 'action_search_api' en el modelo de Python.
+                        -->
                         <div class="text-center">
-                            <button name="action_search_api" 
-                                    string="Consultar" 
-                                    type="object" 
+                            <button name="action_search_api"
+                                    string="Consultar"
+                                    type="object"
                                     class="btn-primary"
                                     icon="fa-search"/>
                         </div>
 
+                        <!--
+                        Sección de Resultados:
+                        Esta sección solo es visible si la búsqueda fue exitosa (el campo 'found' es True).
+                        'invisible' es un atributo de Odoo que controla la visibilidad de los elementos.
+                        -->
                         <separator string="Resultados" invisible="not found"/>
-                        
+
+                        <!-- Contenedor para las imágenes (sprites). Solo visible si se encontró algo. -->
                         <div class="text-center d-flex justify-content-center" invisible="not found">
+                            <!-- Imagen frontal. Siempre visible si hay resultados. -->
                             <div class="mx-2">
                                 <label for="sprite_front" string="Frente" style="font-weight:bold;"/>
                                 <br/>
-                                <field name="sprite_front" 
-                                       widget="image" 
-                                       class="oe_avatar" 
+                                <field name="sprite_front"
+                                       widget="image"
+                                       class="oe_avatar"
                                        options="{'size': [128, 128]}"/>
                             </div>
+                            <!-- Imagen trasera. Solo visible si la búsqueda es de tipo 'pokemon'. -->
                             <div class="mx-2" invisible="search_type == 'item'">
                                 <label for="sprite_back" string="Detrás" style="font-weight:bold;"/>
                                 <br/>
-                                <field name="sprite_back" 
-                                       widget="image" 
-                                       class="oe_avatar" 
+                                <field name="sprite_back"
+                                       widget="image"
+                                       class="oe_avatar"
                                        options="{'size': [128, 128]}"/>
                             </div>
                         </div>
 
+                        <!-- Grupos de datos. Solo visibles si se encontró un resultado. -->
                         <group invisible="not found">
-                            
+
+                            <!-- Grupo para datos generales (nombre, ID). -->
                             <group string="Datos Generales">
                                 <field name="result_name"/>
                                 <field name="result_id"/>
                             </group>
-                            
+
+                            <!-- Grupo para datos físicos del Pokémon. Solo visible si el tipo es 'pokemon'. -->
                             <group string="Físico" invisible="search_type != 'pokemon'">
                                 <field name="poke_types"/>
                                 <field name="height_cm"/>
                                 <field name="weight_kg"/>
                             </group>
 
+                            <!-- Grupo para detalles del objeto. Solo visible si el tipo es 'item'. -->
                             <group string="Detalles Objeto" invisible="search_type != 'item'">
                                 <field name="item_cost"/>
                                 <field name="item_effect"/>
                             </group>
                         </group>
                     </sheet>
+                    <!--
+                    Pie de página del formulario modal.
+                    Contiene botones de acción estándar como 'Cerrar'.
+                    -->
                     <footer>
                         <button string="Cerrar" class="btn-secondary" special="cancel"/>
                     </footer>
@@ -71,6 +108,11 @@
             </field>
         </record>
 
+        <!--
+        Acción de Ventana (Window Action):
+        Define cómo se debe abrir la vista del asistente. En este caso, como una nueva
+        ventana modal ('target':'new'). Esta acción es la que se asocia al menú.
+        -->
         <record id="action_poke_wizard" model="ir.actions.act_window">
             <field name="name">Buscador PokeAPI</field>
             <field name="res_model">poke.wizard</field>
@@ -78,12 +120,19 @@
             <field name="target">new</field>
         </record>
 
+        <!--
+        Entradas de Menú:
+        Crean las opciones en el menú de navegación de Odoo para que los usuarios
+        puedan acceder al asistente.
+        -->
+        <!-- Menú raíz -->
         <menuitem id="menu_poke_root" name="PokeAPI" sequence="10"/>
-        
-        <menuitem id="menu_poke_wizard" 
-                  name="Buscar Pokémon/Item" 
-                  parent="menu_poke_root" 
-                  action="action_poke_wizard" 
+
+        <!-- Submenú que abre el asistente -->
+        <menuitem id="menu_poke_wizard"
+                  name="Buscar Pokémon/Item"
+                  parent="menu_poke_root"
+                  action="action_poke_wizard"
                   sequence="1"/>
     </data>
 </odoo>
